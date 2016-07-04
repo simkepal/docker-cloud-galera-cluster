@@ -1,0 +1,31 @@
+[mysql]
+
+# CLIENT #
+port                           = 3306
+socket                         = /var/lib/mysql/mysql.sock
+
+[mysqld]
+#user=mysql
+default-storage-engine=innodb
+query_cache_size=0
+binlog_format=ROW
+innodb_autoinc_lock_mode=2
+query_cache_type=0
+bind-address=0.0.0.0
+wsrep_on=ON
+
+# Galera Provider Configuration
+wsrep_provider=/usr/lib/galera/libgalera_smm.so
+#wsrep_provider_options="gcache.size=32G"
+
+# Galera Cluster Configuration
+#wsrep_cluster_address=gcomm://
+
+# Galera Synchronization Congifuration
+wsrep_sst_method=rsync
+#wsrep_sst_auth=user:pass
+
+# Galera Node Configuration
+#wsrep_node_address="this_node_ip"
+#wsrep_node_name="this_node_name"
+wsrep_cluster_name=galera_cluster
