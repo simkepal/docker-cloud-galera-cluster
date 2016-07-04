@@ -18,7 +18,9 @@ do
         A=$(echo "$addr" | sed -e 's/^"//'  -e 's/"$//')
         A="https://cloud.docker.com$A"
         T=$(curl -s -H "Authorization: $DOCKERCLOUD_AUTH" -H "Accept: application/json" $A | tr ',' '\n' | grep private_ip | awk -F\" '{print $4}' | awk -F\/ '{print $1}' | sort -u)
-        CLUSTER="${CLUSTER}${T},"
+        if [ $T != $NODE_ADDR]; then
+            CLUSTER="${CLUSTER}${T},"
+        fi
 done
 
 
@@ -39,12 +41,15 @@ echo $CLUSTER
 
 INNOBDB_BUFFER_POOL_SIZE=$((`cat /proc/meminfo | grep MemTotal | cut -d ' ' -f 9` / 2000))M
 #
-echo 'wsrep_cluster_address="$CLUSTER"' >> /etc/mysql/conf.d/cluster.cnf
-echo 'wsrep_node_address="$NODE_ADDR"' >> /etc/mysql/conf.d/cluster.cnf
-echo 'wsrep_node_incoming_address="$NODE_ADDR"' >> /etc/mysql/conf.d/cluster.cnf
-echo 'wsrep_node_name="$HOSTNAME"' >> /etc/mysql/conf.d/cluster.cnf
+echo "wsrep_cluster_address=$CLUSTER" >> /etc/mysql/conf.d/cluster.cnf
+echo "wsrep_node_address=$NODE_ADDR" >> /etc/mysql/conf.d/cluster.cnf
+echo "wsrep_node_incoming_address=$NODE_ADDR" >> /etc/mysql/conf.d/cluster.cnf
+echo "wsrep_node_name=$HOSTNAME" >> /etc/mysql/conf.d/cluster.cnf
 
 echo $INNOBDB_BUFFER_POOL_SIZE
 
 echo /docker-entrypoint.sh --innodb_buffer-pool-size=$INNOBDB_BUFFER_POOL_SIZE --wsrep_node_address="${NODE_ADDR}" --wsrep_node_incoming_address="${NODE_ADDR}" --wsrep_cluster_address="${CLUSTER}" --wsrep_node_name=${HOSTNAME} ${EXTRA_OPTIONS}
-/docker-entrypoint.sh --innodb_buffer-pool-size=$INNOBDB_BUFFER_POOL_SIZE --wsrep_node_address="${NODE_ADDR}" --wsrep_node_incoming_address="${NODE_ADDR}" --wsrep_cluster_address="${CLUSTER}" --wsrep_node_name=${HOSTNAME} ${EXTRA_OPTIONS}
+#/usr/bin/mysqld_safe --wsrep_node_address="${NODE_ADDR}" --wsrep_node_incoming_address="${NODE_ADDR}" --wsrep_cluster_address="${CLUSTER}" --wsrep_node_name=${HOSTNAME} ${EXTRA_OPTIONS}
+
+cat /etc/mysql/conf.d/cluster.cnf
+/docker-entrypoint.sh --innodb_buffer-pool-size=$INNOBDB_BUFFER_POOL_SIZE
