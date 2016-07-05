@@ -18,9 +18,9 @@ do
         A=$(echo "$addr" | sed -e 's/^"//'  -e 's/"$//')
         A="https://cloud.docker.com$A"
         T=$(curl -s -H "Authorization: $DOCKERCLOUD_AUTH" -H "Accept: application/json" $A | tr ',' '\n' | grep private_ip | awk -F\" '{print $4}' | awk -F\/ '{print $1}' | sort -u)
-        if [ $T != $NODE_ADDR]; then
+        #if [ $T != $NODE_ADDR ]; then
             CLUSTER="${CLUSTER}${T},"
-        fi
+        #fi
 done
 
 
@@ -51,5 +51,10 @@ echo $INNOBDB_BUFFER_POOL_SIZE
 echo /docker-entrypoint.sh --innodb_buffer-pool-size=$INNOBDB_BUFFER_POOL_SIZE --wsrep_node_address="${NODE_ADDR}" --wsrep_node_incoming_address="${NODE_ADDR}" --wsrep_cluster_address="${CLUSTER}" --wsrep_node_name=${HOSTNAME} ${EXTRA_OPTIONS}
 #/usr/bin/mysqld_safe --wsrep_node_address="${NODE_ADDR}" --wsrep_node_incoming_address="${NODE_ADDR}" --wsrep_cluster_address="${CLUSTER}" --wsrep_node_name=${HOSTNAME} ${EXTRA_OPTIONS}
 
-cat /etc/mysql/conf.d/cluster.cnf
-/docker-entrypoint.sh --innodb_buffer-pool-size=$INNOBDB_BUFFER_POOL_SIZE
+#cat /docker-entrypoint.sh
+
+if [ $HOSTNAME = "mariadb-1" ]; then
+    /docker-entrypoint.sh --wsrep-new-cluster --innodb_buffer-pool-size=$INNOBDB_BUFFER_POOL_SIZE
+else
+    /docker-entrypoint.sh --innodb_buffer-pool-size=$INNOBDB_BUFFER_POOL_SIZE
+fi

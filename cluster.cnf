@@ -1,5 +1,5 @@
 [mysqld]
-#user=mysql
+user=mysql
 default-storage-engine=innodb
 query_cache_size=0
 binlog_format=ROW
